@@ -1,0 +1,19 @@
+# Maven build output
+target/
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Maven local metadata (optional, usually safe to ignore)
+.mvn/
+
+# Compiled class files (just in case)
+*.class
