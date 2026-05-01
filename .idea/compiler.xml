@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="gcpd-system" />
+        <module name="GCPD-MS" />
       </profile>
     </annotationProcessing>
   </component>
