@@ -30,8 +30,8 @@ public class LoginScreen {
         root.setStyle("-fx-background-color: #0b0f1a;");
 
         // Title
-        Text title = new Text("GOTHAM SYSTEM");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 48));
+        Text title = new Text("GCPD COMMAND SYSTEM");
+        title.setFont(Font.font("Rajdhani", FontWeight.BOLD, 48));
         title.setStyle("-fx-fill: #facc15;");
 
         Text subtitle = new Text("Gotham City Police Department Management System");
@@ -117,7 +117,7 @@ public class LoginScreen {
                 loginBtn
         );
 
-        Text hint = new Text("Demo: USR001/admin123 • USR002/gordon123 • USR003/bullock123");
+        Text hint = new Text("NOTE: SPONSORED AND PAID-FOR IN FULL BY THE WAYNE FOUNDATION");
         hint.setStyle("-fx-fill: #64748b; -fx-font-size: 11;");
 
         root.getChildren().addAll(title, subtitle, card, hint);
