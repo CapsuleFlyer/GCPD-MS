@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 import com.gcpd.ui.screens.LoginScreen;
 
 /**
- * MainApp — JavaFX Application entry point.
+ * MainApp: JavaFX Application entry point.
  * Launches the Login screen first.
  */
 public class MainApp extends Application {

@@ -14,7 +14,7 @@ import javafx.scene.layout.*;
 import java.util.List;
 
 /**
- * SergeantDashboard — handles:
+ * SergeantDashboard: handles:
  * UC-02: Assign Detective to Case
  * UC-04 (submit side): Submit High-Risk Operation Request
  */
@@ -46,7 +46,7 @@ public class SergeantDashboard extends BaseScreen {
         VBox box = new VBox(15);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-02 — Assign Detective to Case");
+        Label title = sectionTitle("UC-02: Assign Detective to Case");
 
         // Unassigned cases table
         Label unassignedLabel = fieldLabel("Unassigned Cases:");
@@ -155,7 +155,7 @@ public class SergeantDashboard extends BaseScreen {
     private Tab buildSubmitOpTab() {
         Tab tab = new Tab("⚠  Request Operation");
 
-        VBox box = card("UC-04 — Submit High-Risk Operation Request");
+        VBox box = card("UC-04: Submit High-Risk Operation Request");
         box.setMaxWidth(600);
 
         Label descLabel = fieldLabel("Operation Description *");

@@ -11,7 +11,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 /**
- * BaseScreen — Gotham-themed shared UI structure
+ * BaseScreen: Gotham-themed shared UI structure
  * Fixes readability issues + applies consistent dark UI styling
  */
 public abstract class BaseScreen {
@@ -55,7 +55,7 @@ public abstract class BaseScreen {
         // 👤 Role display (fixed visibility)
         Label role = new Label(
                 "| " + SessionManager.getInstance().getCurrentRole()
-                        + " — "
+                        + ": "
                         + SessionManager.getInstance().getCurrentUser().getName()
         );
         role.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 13;");
@@ -130,7 +130,6 @@ public abstract class BaseScreen {
                         "-fx-background-radius: 6;"
         );
 
-        // 🔥 dropdown items fix (NO LAMBDA — avoids type errors)
         c.setCellFactory(listView -> new javafx.scene.control.ListCell() {
             @Override
             protected void updateItem(Object item, boolean empty) {

@@ -12,7 +12,7 @@ import javafx.scene.layout.*;
 import java.util.List;
 
 /**
- * EvidenceCustodianDashboard — handles:
+ * EvidenceCustodianDashboard: handles:
  * UC-06: Manage Evidence Lifecycle (transfer + disposal)
  * UC-11: Authorize Evidence Transfer (chain of custody)
  */
@@ -41,7 +41,7 @@ public class EvidenceCustodianDashboard extends BaseScreen {
         VBox box = new VBox(15);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-06 & UC-11 — Evidence Lifecycle & Transfer");
+        Label title = sectionTitle("UC-06 & UC-11: Evidence Lifecycle & Transfer");
 
         // Evidence table
         TableView<String[]> table = buildTable(

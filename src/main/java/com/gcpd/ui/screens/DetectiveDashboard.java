@@ -15,7 +15,7 @@ import javafx.scene.text.FontWeight;
 import java.util.List;
 
 /**
- * DetectiveDashboard — handles:
+ * DetectiveDashboard: handles:
  * UC-01: Report New Incident
  * UC-09: Escalate Incident to Case
  * UC-10: Update Case Status
@@ -47,7 +47,7 @@ public class DetectiveDashboard extends BaseScreen {
     private Tab buildReportIncidentTab() {
         Tab tab = new Tab("📋  Report Incident");
 
-        VBox box = card("UC-01 — Report New Incident");
+        VBox box = card("UC-01: Report New Incident");
         box.setMaxWidth(600);
 
         Label locLabel  = fieldLabel("Crime Location *");
@@ -112,7 +112,7 @@ public class DetectiveDashboard extends BaseScreen {
         VBox box = new VBox(12);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-09 — Escalate Incident to Case");
+        Label title = sectionTitle("UC-09: Escalate Incident to Case");
 
         TableView<String[]> table = buildIncidentTable();
         VBox.setVgrow(table, Priority.ALWAYS);
@@ -187,7 +187,7 @@ public class DetectiveDashboard extends BaseScreen {
         VBox box = new VBox(12);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-10 — Update Case Status");
+        Label title = sectionTitle("UC-10: Update Case Status");
 
         TableView<String[]> table = buildCaseTable();
         VBox.setVgrow(table, Priority.ALWAYS);
@@ -262,7 +262,7 @@ public class DetectiveDashboard extends BaseScreen {
         VBox box = new VBox(12);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-05 — Identify Repeat Offender");
+        Label title = sectionTitle("UC-05: Identify Repeat Offender");
 
         // Search fields
         HBox searchRow = new HBox(10);

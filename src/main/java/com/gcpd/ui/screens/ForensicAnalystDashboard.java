@@ -14,7 +14,7 @@ import javafx.scene.layout.*;
 import java.util.List;
 
 /**
- * ForensicAnalystDashboard — handles:
+ * ForensicAnalystDashboard: handles:
  * UC-03: Log Forensic Evidence (generate report + attach to case)
  */
 public class ForensicAnalystDashboard extends BaseScreen {
@@ -44,10 +44,10 @@ public class ForensicAnalystDashboard extends BaseScreen {
         VBox outer = new VBox(20);
         outer.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-03 — Log Forensic Evidence & Generate Report");
+        Label title = sectionTitle("UC-03: Log Forensic Evidence & Generate Report");
 
         // Step 1: Select Case
-        VBox step1 = card("Step 1 — Select Active Case");
+        VBox step1 = card("Step 1: Select Active Case");
         TableView<String[]> caseTable = buildTable(
             new String[]{"Case ID", "Status", "Priority", "Start Date", "Detective", "Location", "Crime Type"}
         );
@@ -60,7 +60,7 @@ public class ForensicAnalystDashboard extends BaseScreen {
         step1.getChildren().addAll(caseTable, loadCasesBtn);
 
         // Step 2: Log Evidence
-        VBox step2 = card("Step 2 — Log Evidence Item");
+        VBox step2 = card("Step 2: Log Evidence Item");
 
         Label evTypeLabel = fieldLabel("Evidence Type *");
         TextField evTypeField = new TextField();
@@ -75,7 +75,7 @@ public class ForensicAnalystDashboard extends BaseScreen {
         step2.getChildren().addAll(evTypeLabel, evTypeField, evLocLabel, evLocField);
 
         // Step 3: Generate Forensic Report
-        VBox step3 = card("Step 3 — Generate Forensic Report");
+        VBox step3 = card("Step 3: Generate Forensic Report");
 
         Label findingsLabel = fieldLabel("Findings *");
         TextArea findingsArea = new TextArea();
@@ -139,7 +139,7 @@ public class ForensicAnalystDashboard extends BaseScreen {
                 evTypeField.clear(); evLocField.clear();
                 findingsArea.clear(); verdictField.clear();
             } else {
-                showError(status, "Partial failure — check DB.");
+                showError(status, "Partial failure: check DB.");
             }
         });
 

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * CommissionerDashboard — handles:
+ * CommissionerDashboard: handles:
  * UC-04: Approve / Reject High-Risk Operations
  * UC-12: View Crime Analytics Dashboard
  */
@@ -47,7 +47,7 @@ public class CommissionerDashboard extends BaseScreen {
         VBox box = new VBox(15);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-04 — Approve / Reject High-Risk Operations");
+        Label title = sectionTitle("UC-04: Approve / Reject High-Risk Operations");
 
         // Pending operations table
         TableView<String[]> table = buildTable(
@@ -126,7 +126,7 @@ public class CommissionerDashboard extends BaseScreen {
         VBox box = new VBox(20);
         box.setPadding(new Insets(15));
 
-        Label title = sectionTitle("UC-12 — Crime Analytics Dashboard");
+        Label title = sectionTitle("UC-12: Crime Analytics Dashboard");
 
         // Summary cards row
         HBox summaryRow = new HBox(15);

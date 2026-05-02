@@ -44,7 +44,7 @@ public class AdminDashboard extends BaseScreen {
 
         Tab tab = new Tab("➕ Register User");
 
-        VBox box = card("UC-07 — Register New System User");
+        VBox box = card("UC-07: Register New System User");
 
         Label idLabel = fieldLabel("User ID *");
         TextField idField = new TextField();
@@ -81,11 +81,11 @@ public class AdminDashboard extends BaseScreen {
             if (selected == null) return;
             extraField.setDisable(false);
             switch (selected) {
-                case "Detective"         -> extraField.setPromptText("Badge Number — e.g. DET02");
-                case "Sergeant"          -> extraField.setPromptText("Squad ID — e.g. SQ2");
-                case "Commissioner"      -> extraField.setPromptText("Department ID — e.g. DEPT2");
-                case "ForensicAnalyst"   -> extraField.setPromptText("Lab ID — e.g. LAB2");
-                case "EvidenceCustodian" -> extraField.setPromptText("Vault ID — e.g. VLT2");
+                case "Detective"         -> extraField.setPromptText("Badge Number: e.g. DET02");
+                case "Sergeant"          -> extraField.setPromptText("Squad ID: e.g. SQ2");
+                case "Commissioner"      -> extraField.setPromptText("Department ID: e.g. DEPT2");
+                case "ForensicAnalyst"   -> extraField.setPromptText("Lab ID: e.g. LAB2");
+                case "EvidenceCustodian" -> extraField.setPromptText("Vault ID: e.g. VLT2");
                 case "SystemAdmin"       -> {
                     extraField.setPromptText("No role-specific ID required");
                     extraField.setDisable(true);

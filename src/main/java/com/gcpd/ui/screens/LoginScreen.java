@@ -14,7 +14,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 /**
- * LoginScreen — Gotham themed (aligned with BaseScreen UI)
+ * LoginScreen: Gotham themed (aligned with BaseScreen UI)
  */
 public class LoginScreen {
 
