@@ -4,6 +4,7 @@ import com.gcpd.bl.model.SessionManager;
 import com.gcpd.db.CaseDAO;
 import com.gcpd.db.OperationDAO;
 import com.gcpd.db.UserDAO;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,50 +14,41 @@ import javafx.scene.layout.*;
 
 import java.util.List;
 
-/**
- * SergeantDashboard: handles:
- * UC-02: Assign Detective to Case
- * UC-04 (submit side): Submit High-Risk Operation Request
- */
 public class SergeantDashboard extends BaseScreen {
 
-    private final CaseDAO caseDAO     = new CaseDAO();
-    private final UserDAO userDAO     = new UserDAO();
-    private final OperationDAO opDAO  = new OperationDAO();
+    private final CaseDAO caseDAO    = new CaseDAO();
+    private final UserDAO userDAO    = new UserDAO();
+    private final OperationDAO opDAO = new OperationDAO();
 
     @Override
     public Parent getView() {
         TabPane tabs = new TabPane();
-        tabs.setStyle("-fx-background-color: #1a1a2e;");
-        tabs.getTabs().addAll(
-            buildAssignTab(),       // UC-02
-            buildAllCasesTab(),     // View all cases
-            buildSubmitOpTab()      // UC-04 (Sergeant side)
-        );
+        tabs.setStyle("-fx-background-color: #0b0f1a;");
+        tabs.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        tabs.getTabs().addAll(buildAssignTab(), buildAllCasesTab(), buildSubmitOpTab());
         tabs.getTabs().forEach(t -> t.setClosable(false));
-        contentArea.getChildren().add(tabs);
         VBox.setVgrow(tabs, Priority.ALWAYS);
+        contentArea.setFillWidth(true);
+        contentArea.getChildren().clear();
+        contentArea.getChildren().add(tabs);
         return root;
     }
 
-    // ── UC-02: Assign Detective to Case ─────────────────────────────────────
+    // ── UC-02 ────────────────────────────────────────────────────────────────
     private Tab buildAssignTab() {
         Tab tab = new Tab("👮  Assign Detective");
 
         VBox box = new VBox(15);
-        box.setPadding(new Insets(15));
+        box.setPadding(new Insets(20));
+        box.setStyle("-fx-background-color: #0b0f1a;");
 
-        Label title = sectionTitle("UC-02: Assign Detective to Case");
+        Label title = sectionTitle("UC-02 — Assign Detective to Case");
 
-        // Unassigned cases table
-        Label unassignedLabel = fieldLabel("Unassigned Cases:");
-        TableView<String[]> caseTable = buildTable(
-            new String[]{"Case ID", "Status", "Priority", "Location", "Crime Type"}
-        );
+        TableView<String[]> caseTable = buildStyledTable(
+                new String[]{"Case ID", "Status", "Priority", "Location", "Crime Type"});
         VBox.setVgrow(caseTable, Priority.ALWAYS);
-        loadUnassignedCases(caseTable);
+        loadTable(caseTable, caseDAO.getUnassignedCases());
 
-        // Detective picker
         Label detLabel = fieldLabel("Select Detective:");
         ComboBox<String> detectiveBox = new ComboBox<>();
         detectiveBox.setPromptText("Choose detective...");
@@ -64,99 +56,64 @@ public class SergeantDashboard extends BaseScreen {
         styleComboBox(detectiveBox);
         loadDetectives(detectiveBox);
 
-        // Workload info
-        Label workloadInfo = new Label("ℹ  Detectives with 5+ cases are at capacity and cannot be assigned.");
-        workloadInfo.setStyle("-fx-text-fill: #888888; -fx-font-size: 11;");
+        Label info = new Label("ℹ  Detectives with 5+ active cases are at capacity.");
+        info.setStyle("-fx-text-fill: #64748b; -fx-font-size: 11;");
 
-        Label status = statusLabel();
-        HBox btnRow = new HBox(10);
-        Button refreshBtn = secondaryButton("Refresh");
+        Label status  = statusLabel();
+        Button refreshBtn = secondaryButton("⟳  Refresh");
         Button assignBtn  = primaryButton("Assign Detective");
 
-        refreshBtn.setOnAction(e -> {
-            loadUnassignedCases(caseTable);
-            loadDetectives(detectiveBox);
-        });
+        refreshBtn.setOnAction(e -> { loadTable(caseTable, caseDAO.getUnassignedCases()); loadDetectives(detectiveBox); });
 
         assignBtn.setOnAction(e -> {
-            String[] selectedCase = caseTable.getSelectionModel().getSelectedItem();
-            String   selectedDet  = detectiveBox.getValue();
-
-            if (selectedCase == null) { showError(status, "Select a case first."); return; }
-            if (selectedDet == null)  { showError(status, "Select a detective."); return; }
-
-            // Extract userID from "Name (ID)" format
-            String detID = selectedDet.substring(selectedDet.lastIndexOf("(") + 1,
-                                                   selectedDet.lastIndexOf(")"));
-
-            boolean ok = caseDAO.assignDetective(selectedCase[0], detID);
+            String[] sel = caseTable.getSelectionModel().getSelectedItem();
+            String   det = detectiveBox.getValue();
+            if (sel == null) { showError(status, "Select a case."); return; }
+            if (det == null) { showError(status, "Select a detective."); return; }
+            String detID = det.substring(det.lastIndexOf("(") + 1, det.lastIndexOf(")"));
+            boolean ok = caseDAO.assignDetective(sel[0], detID);
             if (ok) {
                 userDAO.updateWorkload(detID, getWorkloadScore(detID) + 1);
-                showSuccess(status, "Detective " + selectedDet + " assigned to case " + selectedCase[0]);
-                loadUnassignedCases(caseTable);
-            } else {
-                showError(status, "Assignment failed.");
-            }
+                showSuccess(status, det + " assigned to case " + sel[0]);
+                loadTable(caseTable, caseDAO.getUnassignedCases());
+            } else showError(status, "Assignment failed.");
         });
 
-        btnRow.getChildren().addAll(refreshBtn, assignBtn);
+        HBox btnRow = new HBox(10, refreshBtn, assignBtn);
         btnRow.setAlignment(Pos.CENTER_LEFT);
 
-        box.getChildren().addAll(title, unassignedLabel, caseTable,
-                                  detLabel, detectiveBox, workloadInfo, btnRow, status);
+        box.getChildren().addAll(title, caseTable, detLabel, detectiveBox, info, btnRow, status);
         tab.setContent(box);
         return tab;
     }
 
-    private void loadUnassignedCases(TableView<String[]> table) {
-        List<String[]> list = caseDAO.getUnassignedCases();
-        table.setItems(FXCollections.observableArrayList(list));
-    }
-
-    private void loadDetectives(ComboBox<String> box) {
-        box.getItems().clear();
-        userDAO.getAllDetectives().forEach(u ->
-            box.getItems().add(u.getName() + " (" + u.getUserID() + ")")
-        );
-    }
-
-    private int getWorkloadScore(String detID) {
-        // Simple: count assigned cases
-        return (int) caseDAO.getAllCases().stream()
-            .filter(c -> detID.equals(c[4]) && !"Closed".equals(c[1]))
-            .count();
-    }
-
-    // ── All Cases overview ───────────────────────────────────────────────────
+    // ── All Cases ────────────────────────────────────────────────────────────
     private Tab buildAllCasesTab() {
         Tab tab = new Tab("📁  All Cases");
 
-        VBox box = new VBox(12);
-        box.setPadding(new Insets(15));
+        VBox box = new VBox(14);
+        box.setPadding(new Insets(20));
+        box.setStyle("-fx-background-color: #0b0f1a;");
 
         Label title = sectionTitle("All Active Cases");
-        TableView<String[]> table = buildTable(
-            new String[]{"Case ID", "Status", "Priority", "Start Date", "Detective", "Location", "Crime Type"}
-        );
+        TableView<String[]> table = buildStyledTable(
+                new String[]{"Case ID", "Status", "Priority", "Start Date", "Detective", "Location", "Crime Type"});
         VBox.setVgrow(table, Priority.ALWAYS);
+        loadTable(table, caseDAO.getAllCases());
 
-        Button refreshBtn = secondaryButton("Refresh");
-        refreshBtn.setOnAction(e -> table.setItems(
-            FXCollections.observableArrayList(caseDAO.getAllCases())
-        ));
+        Button refreshBtn = secondaryButton("⟳  Refresh");
+        refreshBtn.setOnAction(e -> loadTable(table, caseDAO.getAllCases()));
 
-        table.setItems(FXCollections.observableArrayList(caseDAO.getAllCases()));
         box.getChildren().addAll(title, table, refreshBtn);
         tab.setContent(box);
         return tab;
     }
 
-    // ── UC-04 Sergeant side: Submit Operation Request ────────────────────────
+    // ── UC-04 Sergeant side ──────────────────────────────────────────────────
     private Tab buildSubmitOpTab() {
         Tab tab = new Tab("⚠  Request Operation");
 
-        VBox box = card("UC-04: Submit High-Risk Operation Request");
-        box.setMaxWidth(600);
+        VBox box = card("UC-04 — Submit High-Risk Operation Request");
 
         Label descLabel = fieldLabel("Operation Description *");
         TextArea descArea = new TextArea();
@@ -165,12 +122,10 @@ public class SergeantDashboard extends BaseScreen {
         styleTextArea(descArea);
 
         Label riskLabel = fieldLabel("Risk Level");
-        ComboBox<String> riskBox = new ComboBox<>(FXCollections.observableArrayList(
-            "High", "Critical"
-        ));
+        ComboBox<String> riskBox = new ComboBox<>(FXCollections.observableArrayList("High", "Critical"));
         riskBox.setValue("High");
-        styleComboBox(riskBox);
         riskBox.setMaxWidth(Double.MAX_VALUE);
+        styleComboBox(riskBox);
 
         Label caseLabel = fieldLabel("Linked Case ID (optional)");
         TextField caseField = new TextField();
@@ -181,43 +136,74 @@ public class SergeantDashboard extends BaseScreen {
         Button submitBtn = primaryButton("Submit for Commissioner Approval");
 
         submitBtn.setOnAction(e -> {
-            String desc = descArea.getText().trim();
-            if (desc.isEmpty()) { showError(status, "Description is required."); return; }
-
-            String opID = "OP-" + System.currentTimeMillis();
+            if (descArea.getText().isBlank()) { showError(status, "Description is required."); return; }
+            String opID  = "OP-" + System.currentTimeMillis();
             String reqBy = SessionManager.getInstance().getCurrentUserID();
-            String caseID = caseField.getText().trim().isEmpty() ? null : caseField.getText().trim();
-
-            boolean ok = opDAO.insertOperation(opID, reqBy, riskBox.getValue(), caseID, desc);
-            if (ok) {
-                showSuccess(status, "Operation " + opID + " submitted for approval.");
-                descArea.clear(); caseField.clear();
-            } else {
-                showError(status, "Submission failed.");
-            }
+            String caseID = caseField.getText().isBlank() ? null : caseField.getText().trim();
+            boolean ok = opDAO.insertOperation(opID, reqBy, riskBox.getValue(), caseID, descArea.getText().trim());
+            if (ok) { showSuccess(status, "Operation " + opID + " submitted."); descArea.clear(); caseField.clear(); }
+            else      showError(status, "Submission failed.");
         });
 
-        box.getChildren().addAll(descLabel, descArea, riskLabel, riskBox,
-                                  caseLabel, caseField, submitBtn, status);
-
-        ScrollPane scroll = new ScrollPane(box);
-        scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: #1a1a2e;");
-        tab.setContent(scroll);
+        box.getChildren().addAll(descLabel, descArea, riskLabel, riskBox, caseLabel, caseField, submitBtn, status);
+        tab.setContent(styledScroll(box));
         return tab;
     }
 
-    private TableView<String[]> buildTable(String[] columns) {
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private void loadDetectives(ComboBox<String> box) {
+        box.getItems().clear();
+        userDAO.getAllDetectives().forEach(u -> box.getItems().add(u.getName() + " (" + u.getUserID() + ")"));
+    }
+
+    private int getWorkloadScore(String detID) {
+        return (int) caseDAO.getAllCases().stream().filter(c -> detID.equals(c[4]) && !"Closed".equals(c[1])).count();
+    }
+
+    private void loadTable(TableView<String[]> table, List<String[]> data) {
+        table.setItems(FXCollections.observableArrayList(data));
+        Platform.runLater(() -> applyHeaderStyles(table));
+    }
+
+    TableView<String[]> buildStyledTable(String[] columns) {
         TableView<String[]> table = new TableView<>();
-        table.setStyle("-fx-background-color: #16213e;");
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setFixedCellSize(38);
+        table.setStyle(
+                "-fx-background-color:#1f2937;-fx-control-inner-background:#1f2937;" +
+                "-fx-control-inner-background-alt:#253347;-fx-table-cell-border-color:#2d3748;" +
+                "-fx-border-color:#334155;-fx-border-radius:8;-fx-background-radius:8;"
+        );
         for (int i = 0; i < columns.length; i++) {
             final int idx = i;
             TableColumn<String[], String> col = new TableColumn<>(columns[i]);
             col.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(
-                d.getValue().length > idx ? d.getValue()[idx] : ""));
+                    d.getValue().length > idx ? d.getValue()[idx] : ""));
+            col.setCellFactory(tc -> new TableCell<>() {
+                @Override protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    String bg = getIndex() % 2 == 0 ? "#1f2937" : "#253347";
+                    if (empty || item == null) { setText(null); setStyle("-fx-background-color:" + bg + ";"); }
+                    else { setText(item); setStyle("-fx-background-color:" + bg + ";-fx-text-fill:#f1f5f9;-fx-font-size:13px;-fx-padding:0 12px;"); }
+                }
+            });
             table.getColumns().add(col);
         }
+        Platform.runLater(() -> applyHeaderStyles(table));
         return table;
+    }
+
+    private void applyHeaderStyles(TableView<?> table) {
+        table.lookupAll(".column-header").forEach(n -> n.setStyle("-fx-background-color:#1a2236;-fx-border-color:#334155;-fx-border-width:0 1px 2px 0;"));
+        table.lookupAll(".column-header .label").forEach(n -> n.setStyle("-fx-text-fill:#facc15;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:0 12px;"));
+        table.lookupAll(".column-header-background").forEach(n -> n.setStyle("-fx-background-color:#1a2236;-fx-border-color:#334155;-fx-border-width:0 0 2px 0;"));
+        table.lookupAll(".corner").forEach(n -> n.setStyle("-fx-background-color:#1a2236;"));
+    }
+
+    private ScrollPane styledScroll(javafx.scene.Node content) {
+        ScrollPane s = new ScrollPane(content);
+        s.setFitToWidth(true);
+        s.setStyle("-fx-background:#0b0f1a;-fx-background-color:#0b0f1a;");
+        return s;
     }
 }
