@@ -1,6 +1,5 @@
 -- ============================================================
 -- GCPD Management System - SQL Server Schema
--- Matches Class Diagram from Deliverable 3
 -- ============================================================
 
 CREATE DATABASE GCPD_DB;
