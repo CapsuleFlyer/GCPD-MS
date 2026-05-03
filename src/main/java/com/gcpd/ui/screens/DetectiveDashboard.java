@@ -27,7 +27,8 @@ public class DetectiveDashboard extends BaseScreen {
                 buildReportIncidentTab(),
                 buildEscalateTab(),
                 buildMyCasesTab(),
-                buildRepeatOffenderTab()
+                buildRepeatOffenderTab(),
+                buildCreateSuspectTab()
         );
         tabs.getTabs().forEach(t -> t.setClosable(false));
         VBox.setVgrow(tabs, Priority.ALWAYS);
@@ -185,16 +186,16 @@ public class DetectiveDashboard extends BaseScreen {
 
         Label title = sectionTitle("UC-05 — Identify Repeat Offender");
 
-        TextField nameField  = new TextField(); nameField.setPromptText("Suspect name...");  styleTextField(nameField);
-        TextField crimeField = new TextField(); crimeField.setPromptText("Crime keyword..."); styleTextField(crimeField);
-        Spinner<Integer> riskSpinner = new Spinner<>(1, 5, 1);
-        riskSpinner.setStyle("-fx-background-color: #1f2937;"); riskSpinner.setPrefWidth(70);
+        Label searchLabel = fieldLabel("Search by Name (leave blank to show all):");
+        TextField nameField = new TextField();
+        nameField.setPromptText("e.g. Oswald...");
+        styleTextField(nameField);
         Button searchBtn = primaryButton("Search");
+        Button showAllBtn = secondaryButton("Show All");
 
-        HBox searchRow = new HBox(10, nameField, crimeField, fieldLabel("Min Risk:"), riskSpinner, searchBtn);
+        HBox searchRow = new HBox(10, nameField, searchBtn, showAllBtn);
         searchRow.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(nameField, Priority.ALWAYS);
-        HBox.setHgrow(crimeField, Priority.ALWAYS);
 
         TableView<String[]> table = buildStyledTable(
                 new String[]{"Suspect ID", "Name", "Criminal History", "Risk Level", "Repeat Offender?", "Cases"});
@@ -205,23 +206,94 @@ public class DetectiveDashboard extends BaseScreen {
         Button flagBtn = primaryButton("🚩 Flag as Repeat Offender");
 
         searchBtn.setOnAction(e -> {
-            List<String[]> results = suspectDAO.searchSuspects(
-                    nameField.getText().trim(), crimeField.getText().trim(), riskSpinner.getValue());
+            List<String[]> results = suspectDAO.searchSuspects(nameField.getText().trim(), "", 1);
             loadTable(table, results);
-            if (results.isEmpty()) showError(status, "No matches found.");
+            if (results.isEmpty()) showError(status, "No suspects found matching that name.");
             else showSuccess(status, results.size() + " suspect(s) found.");
         });
 
+        showAllBtn.setOnAction(e -> {
+            nameField.clear();
+            List<String[]> results = suspectDAO.searchSuspects("", "", 1);
+            loadTable(table, results);
+            showSuccess(status, results.size() + " suspect(s) loaded.");
+        });
+
+        // pressing Enter in the name field triggers search
+        nameField.setOnAction(e -> searchBtn.fire());
+
         flagBtn.setOnAction(e -> {
             String[] sel = table.getSelectionModel().getSelectedItem();
-            if (sel == null) { showError(status, "Select a suspect."); return; }
+            if (sel == null) { showError(status, "Select a suspect first."); return; }
             boolean ok = suspectDAO.flagRepeatOffender(sel[0]);
-            if (ok) { showSuccess(status, sel[1] + " flagged."); searchBtn.fire(); }
+            if (ok) { showSuccess(status, sel[1] + " flagged as repeat offender."); searchBtn.fire(); }
             else      showError(status, "Failed to flag.");
         });
 
-        box.getChildren().addAll(title, searchRow, table, flagBtn, status);
+        box.getChildren().addAll(title, searchLabel, searchRow, table, flagBtn, status);
         tab.setContent(box);
+        return tab;
+    }
+
+    // ── Create Suspect Profile ───────────────────────────────────────────────
+    private Tab buildCreateSuspectTab() {
+        Tab tab = new Tab("👤  Create Suspect");
+
+        VBox box = card("Create Suspect Profile");
+
+        Label idLabel = fieldLabel("Suspect ID *");
+        TextField idField = new TextField();
+        idField.setPromptText("e.g. SUP001");
+        styleTextField(idField);
+
+        Label nameLabel = fieldLabel("Full Name *");
+        TextField nameField = new TextField();
+        nameField.setPromptText("e.g. Oswald Cobblepot");
+        styleTextField(nameField);
+
+        Label historyLabel = fieldLabel("Criminal History *");
+        TextArea historyArea = new TextArea();
+        historyArea.setPromptText("e.g. Robbery, Assault, Racketeering...");
+        historyArea.setPrefRowCount(3);
+        styleTextArea(historyArea);
+
+        Label riskLabel = fieldLabel("Risk Level (1 = Low, 5 = Critical)");
+        Spinner<Integer> riskSpinner = new Spinner<>(1, 5, 1);
+        riskSpinner.setStyle("-fx-background-color: #1f2937;");
+        riskSpinner.setMaxWidth(Double.MAX_VALUE);
+
+        Label status = statusLabel();
+        Button createBtn = primaryButton("Create Suspect Profile");
+
+        createBtn.setOnAction(e -> {
+            String sid     = idField.getText().trim();
+            String name    = nameField.getText().trim();
+            String history = historyArea.getText().trim();
+
+            if (sid.isEmpty() || name.isEmpty() || history.isEmpty()) {
+                showError(status, "Suspect ID, Name and Criminal History are required.");
+                return;
+            }
+
+            boolean ok = suspectDAO.insertSuspect(sid, name, history, riskSpinner.getValue());
+            if (ok) {
+                showSuccess(status, "Suspect " + name + " (" + sid + ") created successfully.");
+                idField.clear(); nameField.clear(); historyArea.clear(); riskSpinner.getValueFactory().setValue(1);
+            } else {
+                showError(status, "Failed to create suspect. ID may already exist.");
+            }
+        });
+
+        box.getChildren().addAll(
+                idLabel, idField,
+                nameLabel, nameField,
+                historyLabel, historyArea,
+                riskLabel, riskSpinner,
+                createBtn, status
+        );
+
+        ScrollPane scroll = styledScroll(box);
+        tab.setContent(scroll);
         return tab;
     }
 

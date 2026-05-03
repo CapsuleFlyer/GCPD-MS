@@ -72,7 +72,7 @@ public class EvidenceCustodianDashboard extends BaseScreen {
 
             String custodianID = SessionManager.getInstance().getCurrentUserID();
             String logID = "LOG-" + System.currentTimeMillis();
-            boolean ok1 = evidenceDAO.updateEvidenceStatus(sel[0], "Transferred");
+            boolean ok1 = evidenceDAO.transferEvidence(sel[0], destField.getText().trim());
             boolean ok2 = evidenceDAO.insertCustodyLog(logID, sel[0], sel[2],
                     "Transferred to " + destField.getText().trim(), custodianID, notesField.getText().trim());
 

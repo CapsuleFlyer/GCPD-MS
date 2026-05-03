@@ -195,5 +195,5 @@ END CATCH;
 
 
 SELECT * FROM Users;
-SELECT * FROM Evidence;
+SELECT * FROM Suspects;
 SELECT * FROM Incidents;

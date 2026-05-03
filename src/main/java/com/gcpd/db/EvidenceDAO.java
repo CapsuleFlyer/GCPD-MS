@@ -65,6 +65,20 @@ public class EvidenceDAO {
         return list;
     }
 
+    public boolean transferEvidence(String evidenceID, String destination) {
+        String sql = "UPDATE Evidence SET status = 'Transferred', storageLocation = ? WHERE evidenceID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, destination);
+            ps.setString(2, evidenceID);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("transferEvidence error: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean updateEvidenceStatus(String evidenceID, String newStatus) {
         String sql = "UPDATE Evidence SET status = ? WHERE evidenceID = ?";
         try (Connection conn = DatabaseConnection.getConnection();

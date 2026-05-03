@@ -96,6 +96,40 @@ public class AdminDashboard extends BaseScreen {
         Label status = statusLabel();
         Button registerBtn = primaryButton("Register User");
 
+        registerBtn.setOnAction(e -> {
+            String uid   = idField.getText().trim();
+            String name  = nameField.getText().trim();
+            String pass  = passField.getText().trim();
+            String role  = roleBox.getValue();
+            String extra = extraField.getText().trim();
+
+            if (uid.isEmpty() || name.isEmpty() || pass.isEmpty() || role == null) {
+                showError(status, "User ID, Name, Password and Role are all required.");
+                return;
+            }
+            if (userDAO.userExists(uid)) {
+                showError(status, "User ID '" + uid + "' already exists.");
+                return;
+            }
+
+            boolean ok = userDAO.insertUser(
+                uid, name, role, pass,
+                "Detective".equals(role)         ? extra : null,
+                "Sergeant".equals(role)          ? extra : null,
+                "Commissioner".equals(role)      ? extra : null,
+                "EvidenceCustodian".equals(role) ? extra : null,
+                "ForensicAnalyst".equals(role)   ? extra : null
+            );
+
+            if (ok) {
+                showSuccess(status, "User " + uid + " registered as " + role + " successfully.");
+                idField.clear(); nameField.clear(); passField.clear();
+                roleBox.setValue(null); extraField.clear(); extraField.setDisable(true);
+            } else {
+                showError(status, "Registration failed. Check DB connection.");
+            }
+        });
+
         box.getChildren().addAll(
                 idLabel, idField,
                 nameLabel, nameField,

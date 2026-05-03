@@ -9,7 +9,7 @@ public class SuspectDAO {
 
     public boolean insertSuspect(String suspectID, String name, String criminalHistory, int riskLevel) {
         String sql = "INSERT INTO Suspects (suspectID, name, criminalHistory, riskLevel, isRepeatOffender) " +
-                     "VALUES (?, ?, ?, ?, 0)";
+                "VALUES (?, ?, ?, ?, 0)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, suspectID);
@@ -24,27 +24,24 @@ public class SuspectDAO {
         }
     }
 
-    /** Search suspects by name and/or crime type (for UC-05 Identify Repeat Offender). */
+    /** Search suspects by name for UC-05. Pass empty string to get all. */
     public List<String[]> searchSuspects(String nameQuery, String crimeQuery, int minRisk) {
         List<String[]> list = new ArrayList<>();
-        String sql = "SELECT s.*, COUNT(cs.caseID) AS caseCount " +
-                     "FROM Suspects s LEFT JOIN Case_Suspects cs ON s.suspectID = cs.suspectID " +
-                     "WHERE s.name LIKE ? AND (? = '' OR s.criminalHistory LIKE ?) " +
-                     "AND s.riskLevel >= ? " +
-                     "GROUP BY s.suspectID, s.name, s.criminalHistory, s.riskLevel, s.isRepeatOffender";
+        String sql = "SELECT suspectID, name, CAST(criminalHistory AS VARCHAR(500)) AS criminalHistory, " +
+                "riskLevel, isRepeatOffender " +
+                "FROM Suspects WHERE name LIKE ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, "%" + nameQuery + "%");
-            ps.setString(2, crimeQuery == null ? "" : crimeQuery);
-            ps.setString(3, "%" + (crimeQuery == null ? "" : crimeQuery) + "%");
-            ps.setInt(4, minRisk <= 0 ? 1 : minRisk);
+            ps.setString(1, "%" + (nameQuery == null ? "" : nameQuery) + "%");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(new String[]{
-                    rs.getString("suspectID"), rs.getString("name"),
-                    rs.getString("criminalHistory"), String.valueOf(rs.getInt("riskLevel")),
-                    String.valueOf(rs.getBoolean("isRepeatOffender")),
-                    String.valueOf(rs.getInt("caseCount"))
+                        rs.getString("suspectID"),
+                        rs.getString("name"),
+                        rs.getString("criminalHistory"),
+                        String.valueOf(rs.getInt("riskLevel")),
+                        rs.getBoolean("isRepeatOffender") ? "Yes" : "No",
+                        "—"
                 });
             }
         } catch (SQLException e) {
@@ -69,15 +66,15 @@ public class SuspectDAO {
 
     public List<String[]> getAllSuspects() {
         List<String[]> list = new ArrayList<>();
-        String sql = "SELECT * FROM Suspects";
+        String sql = "SELECT suspectID, name, CAST(criminalHistory AS VARCHAR(500)) AS criminalHistory, riskLevel, isRepeatOffender FROM Suspects";
         try (Connection conn = DatabaseConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 list.add(new String[]{
-                    rs.getString("suspectID"), rs.getString("name"),
-                    rs.getString("criminalHistory"), String.valueOf(rs.getInt("riskLevel")),
-                    String.valueOf(rs.getBoolean("isRepeatOffender"))
+                        rs.getString("suspectID"), rs.getString("name"),
+                        rs.getString("criminalHistory"), String.valueOf(rs.getInt("riskLevel")),
+                        String.valueOf(rs.getBoolean("isRepeatOffender"))
                 });
             }
         } catch (SQLException e) {
